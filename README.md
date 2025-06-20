@@ -1,5 +1,7 @@
 # setup-python-win7
 
+[![Test composite action](https://github.com/LorenEteval/setup-python-win7/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/LorenEteval/setup-python-win7/actions/workflows/test.yml)
+
 GitHub action that sets up a Windows7–compatible version of Python.
 
 ## Usage
