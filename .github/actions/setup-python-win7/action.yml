@@ -76,12 +76,11 @@ runs:
         echo %RESOLVED_PYTHON_SHORT_VERSION%
         set pythonInstaller=python-%RESOLVED_PYTHON_VERSION%-${{ inputs.architecture }}-full.exe
         curl -L -o %pythonInstaller% https://github.com/${{ inputs.github-repo }}/raw/refs/heads/${{ inputs.github-repo-branch }}/%RESOLVED_PYTHON_VERSION%/%pythonInstaller%
-        start /wait %pythonInstaller% /quiet InstallAllUsers=1 PrependPath=1 Include_launcher=1
+        start /wait %pythonInstaller% /quiet PrependPath=1 Include_launcher=1
     - name: Add Python for Windows7 to PATH
       shell: bash
       run: |
-        export pythonWin7Home="C:/Program Files/Python$RESOLVED_PYTHON_SHORT_VERSION"
-        echo pythonWin7Home=$pythonWin7Home
+        export pythonWin7Home="$LOCALAPPDATA\\Programs\\Python\\Python$RESOLVED_PYTHON_SHORT_VERSION"
         echo PYTHON_WIN7_HOME=$pythonWin7Home >> $GITHUB_ENV
         echo "$pythonWin7Home" >> "$GITHUB_PATH"
-        echo "$pythonWin7Home/Scripts" >> "$GITHUB_PATH"
+        echo "$pythonWin7Home\\Scripts" >> "$GITHUB_PATH"
