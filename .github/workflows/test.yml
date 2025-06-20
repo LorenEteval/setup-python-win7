@@ -1,10 +1,10 @@
-name: Test local composite action
+name: Test composite action
 
 on: [ push, pull_request ]
 
 jobs:
   test-composite:
-    name: Test local composite on Python${{ matrix.python-version }} freethreaded ${{ matrix.freethreaded }} on ${{ matrix.os }}
+    name: Test composite on Python${{ matrix.python-version }} freethreaded ${{ matrix.freethreaded }} on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     continue-on-error: true
     strategy:
