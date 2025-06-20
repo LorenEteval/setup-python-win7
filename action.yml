@@ -115,3 +115,6 @@ runs:
         echo PYTHON_WIN7_HOME=$pythonWin7Home >> $GITHUB_ENV
         echo "$pythonWin7Home" >> "$GITHUB_PATH"
         echo "$pythonWin7Home\\Scripts" >> "$GITHUB_PATH"
+branding:
+  color: blue
+  icon: package
