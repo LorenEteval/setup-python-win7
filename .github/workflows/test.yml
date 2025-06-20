@@ -29,8 +29,13 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           freethreaded: ${{ matrix.freethreaded }}
-      - name: Check Python for Windows7
+      - name: Check Python for Windows7 version in cmd
         shell: cmd
         run: |
           echo %PYTHON_WIN7_HOME%
+          python -c "import sys; print(sys.version)"
+      - name: Check Python for Windows7 version in bash
+        shell: bash
+        run: |
+          echo $PYTHON_WIN7_HOME
           python -c "import sys; print(sys.version)"
