@@ -1,0 +1,117 @@
+name: "Setup Python for Windows7 Action"
+description: "Set up GitHub Actions workflow with a specific version of Python for Windows7"
+
+inputs:
+  python-version:
+    description: "Python version input, e.g. '3.11' or '3.11.13'"
+    required: true
+  architecture:
+    description: "Python installer architecture, e.g. 'amd64' or 'arm64'"
+    required: false
+    default: amd64
+  freethreaded:
+    description: "Use freethreaded Python or not"
+    required: false
+    default: "false"
+  github-repo:
+    description: "Python for Windows7 Github repository"
+    required: false
+    default: adang1345/PythonWin7
+  github-repo-branch:
+    description: "Python for Windows7 Github repository: branch"
+    required: false
+    default: master
+
+runs:
+  using: "composite"
+  steps:
+    - name: Resolve input Python version
+      shell: pwsh
+      run: |
+        $inputVersion = "${{ inputs.python-version }}"
+        Write-Host "Input version: $inputVersion"
+
+        if ($inputVersion -match "^\d+\.\d+$") {
+          Write-Host "Resolving latest patch version for $inputVersion from PythonWin7..."
+
+          $url = "https://api.github.com/repos/${{ inputs.github-repo }}/contents/"
+          $headers = @{ "User-Agent" = "GitHubAction" }
+          $response = Invoke-RestMethod -Uri $url -Headers $headers
+
+          $filtered = $response | Where-Object {
+            $_.type -eq "dir" -and $_.name -match "^$inputVersion\.\d+$"
+          }
+
+          if (-not $filtered) {
+            Write-Error "No matching directories found for $inputVersion"
+            exit 1
+          }
+
+          $versions = $filtered | ForEach-Object { $_.name }
+          $latest = $versions | Sort-Object {[version]$_} | Select-Object -Last 1
+
+          Write-Host "Resolved Python version: $latest"
+          echo "RESOLVED_PYTHON_VERSION=$latest" >> $env:GITHUB_ENV
+        }
+        else {
+          Write-Host "Full version provided: $inputVersion"
+          echo "RESOLVED_PYTHON_VERSION=$inputVersion" >> $env:GITHUB_ENV
+        }
+    - name: Extract short version (e.g., 311)
+      shell: bash
+      run: |
+        short=$(echo "${RESOLVED_PYTHON_VERSION}" | cut -d. -f1-2 | tr -d .)
+        echo "RESOLVED_PYTHON_SHORT_VERSION=$short" >> $GITHUB_ENV
+    - name: Remove pre-installed Python from PATH (PowerShell)
+      shell: pwsh
+      run: |
+        $pythonPath = (Get-Command python).Source
+        Write-Host "Found Python path at $pythonPath"
+
+        $pythonHome = Split-Path $pythonPath
+        Write-Host "Found Python home at $pythonHome"
+
+        $filterPath = ($env:Path -split ';' | Where-Object { $_ -notlike "$pythonHome*" }) -join ';'
+        "PATH=$filterPath" >> $env:GITHUB_ENV
+    - name: Set up Python for Windows7
+      shell: cmd
+      run: |
+        echo %RESOLVED_PYTHON_VERSION%
+        echo %RESOLVED_PYTHON_SHORT_VERSION%
+        set pythonInstaller=python-%RESOLVED_PYTHON_VERSION%-${{ inputs.architecture }}-full.exe
+        curl -L -o %pythonInstaller% https://github.com/${{ inputs.github-repo }}/raw/refs/heads/${{ inputs.github-repo-branch }}/%RESOLVED_PYTHON_VERSION%/%pythonInstaller%
+        start /wait %pythonInstaller% /quiet PrependPath=1 Include_launcher=1 Include_freethreaded=1
+        echo PYTHON_WIN7_HOME=%LOCALAPPDATA%\Programs\Python\Python%RESOLVED_PYTHON_SHORT_VERSION%>>%GITHUB_ENV%
+    - name: Replace python.exe with freethreaded version if applicable
+      shell: pwsh
+      run: |
+        $freethreaded = "${{ inputs.freethreaded }}"
+        $shortVer = $env:RESOLVED_PYTHON_SHORT_VERSION
+        $pythonDir = $env:PYTHON_WIN7_HOME
+
+        $shortVerInt = [int]$shortVer
+        if ($freethreaded -eq "true" -and $shortVerInt -ge 313) {
+          # Convert 313 → 3.13
+          $major = $shortVer.Substring(0, 1)
+          $minor = $shortVer.Substring(1)
+          $versionString = "$major.$minor"
+
+          $src = Join-Path $pythonDir "python${versionString}t.exe"
+          $dst = Join-Path $pythonDir "python.exe"
+
+          if (Test-Path $src) {
+            Write-Host "Replacing python.exe with freethreaded version at: $src"
+            Copy-Item -Force $src $dst
+          } else {
+            Write-Warning "Freethreaded Python binary not found: $src"
+          }
+        } else {
+          Write-Host "Skipping freethreaded replacement (freethreaded=$freethreaded, shortVer=$shortVer)"
+        }
+    - name: Add Python for Windows7 to PATH
+      shell: bash
+      run: |
+        export pythonWin7Home="$LOCALAPPDATA\\Programs\\Python\\Python$RESOLVED_PYTHON_SHORT_VERSION"
+        echo PYTHON_WIN7_HOME=$pythonWin7Home >> $GITHUB_ENV
+        echo "$pythonWin7Home" >> "$GITHUB_PATH"
+        echo "$pythonWin7Home\\Scripts" >> "$GITHUB_PATH"
