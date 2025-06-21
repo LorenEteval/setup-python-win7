@@ -12,6 +12,9 @@ inputs:
     description: "Use freethreaded Python or not"
     required: false
     default: "false"
+  check-latest:
+    description: "Dummy input, if python version is specified as 'x.y', then always use latest"
+    required: false
   github-repo:
     description: "Python for Windows7 Github repository"
     required: false
