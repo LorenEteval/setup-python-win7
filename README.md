@@ -14,11 +14,11 @@ GitHub action that sets up a Windows7–compatible version of Python.
     python-version: "3.11"
     # optional: freethreaded version or not, default is false
     freethreaded: false
-    # optional: amd64 or arm64, default is amd64. 
-    architecture: amd64
-    # optional: setup python for windows7 from this repo
+    # optional: x86, x64, or arm64, default is host OS architecture
+    architecture: x64
+    # optional: setup Python for windows7 from this repo
     github-repo: adang1345/PythonWin7
-    # optional: setup python for windows7 from this repo branch
+    # optional: setup Python for windows7 from this repo branch
     github-repo-branch: "master"
 - name: Check Python for Windows7 version
   shell: bash
