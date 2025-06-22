@@ -14,6 +14,8 @@ GitHub action that sets up a Windows7–compatible version of Python.
     python-version: "3.11"
     # optional: freethreaded version or not, default is false
     freethreaded: false
+    # optional: dummy input, if python version is specified as 'x.y', then always use latest
+    check-latest: true
     # optional: x86, x64, or arm64, default is host OS architecture
     architecture: x64
     # optional: setup Python for windows7 from this repo
@@ -23,6 +25,10 @@ GitHub action that sets up a Windows7–compatible version of Python.
 - name: Check Python for Windows7 version
   shell: bash
   run: |
-    echo $PYTHON_WIN7_HOME
+    python_path=$(which python)
+    python_home=$(dirname "$python_path")
+
+    echo "Python home is: $python_home"
+
     python -c "import sys; print(sys.version)"
 ```
